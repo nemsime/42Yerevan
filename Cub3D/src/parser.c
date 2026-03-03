@@ -98,10 +98,12 @@ void	set_flag(t_game **game, char *element)
 int	check_flag(t_game *game, char flag)
 {
 	if (flag == 'D' && (game->state.we > 1 || game->state.ea > 1
-			|| game->state.so > 1 || game->state.no > 1))
+			|| game->state.so > 1 || game->state.no > 1 || game->state.c > 1
+			|| game->state.f > 1))
 		return (1);
 	else if (flag == 'Z' && (game->state.we == 0 || game->state.ea == 0
-			|| game->state.so == 0 || game->state.no == 0))
+			|| game->state.so == 0 || game->state.no == 0 || game->state.c == 0
+			|| game->state.f == 0))
 		return (1);
 	else
 		return (0);
@@ -171,6 +173,9 @@ int	parse_color(char *line, char *element, t_game *game)
 	if (r < 0 || g < 0 || b < 0)
 		return (0);
 	color = (r << 16) | (g << 8) | b;
+	set_flag(&game, element);
+	if (check_flag(game, 'D'))
+		return (0);
 	assets_input(&game, element, line, color);
 	return (1);
 }
@@ -212,6 +217,8 @@ int	validate_elements(int fd, t_game *game)
 		free(line);
 		line = get_next_line(fd);
 	}
+	if (check_flag(game, 'Z'))
+		return (0);
 	return (1);
 }
 
@@ -231,6 +238,7 @@ void	validation_stage(int argc, char **argv, t_game *game)
 	ft_memset(game, 0, sizeof(t_game));
 	if (!validate_elements(fd, game))
 	{
+		free_game_content(game);
 		get_next_line(-1);
 		end_error(fd, "ERROR: map is not valid\n");
 	}

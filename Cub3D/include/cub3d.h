@@ -58,5 +58,6 @@ typedef struct s_game
 void				validation_stage(int argc, char **argv, t_game *game);
 void				end_error(int fd, char *str);
 void				free_split(char ***arr);
+void	free_game_content(t_game *game);
 
 #endif
