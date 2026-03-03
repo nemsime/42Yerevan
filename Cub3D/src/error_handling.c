@@ -1,6 +1,6 @@
 #include "../include/cub3d.h"
 
-void	end_error(int fd,char *str)
+void	end_error(int fd, char *str)
 {
 	write(2, str, ft_strlen(str));
 	if (fd)
@@ -10,10 +10,10 @@ void	end_error(int fd,char *str)
 
 void	free_split(char ***arr)
 {
-	int	i;
+	int i;
 
 	if (!arr || !*arr)
-		return;
+		return ;
 	i = 0;
 	while ((*arr)[i])
 	{
