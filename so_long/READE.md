@@ -52,12 +52,6 @@ Example:
 * There must be a **valid path** to collect all collectibles and reach the exit
 * No invalid characters are allowed
 
-If the map is invalid, the program prints:
-
-```
-Error
-```
-
 ---
 
 # Controls
