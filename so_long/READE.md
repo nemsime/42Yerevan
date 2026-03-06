@@ -121,7 +121,7 @@ make
 Example:
 
 ```
-./so_long maps/map1.ber
+./so_long maps/map_small.ber
 ```
 
 ---
