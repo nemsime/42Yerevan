@@ -51,6 +51,7 @@ void	trim_right(char *str)
 		len--;
 	}
 }
+
 char	*space_move(char **line, char *element)
 {
 	while (**line == ' ' || **line == '\t')
@@ -63,16 +64,16 @@ char	*space_move(char **line, char *element)
 	return (*line);
 }
 
-void	assets_input(t_game **game, char *element, char *line, int color)
+void	assets_input(t_game **game, char *element, char *texture, int color)
 {
 	if (starts_with(element, "NO "))
-		(*game)->assets.no = ft_strdup(line);
+		(*game)->assets.no = ft_strdup(texture);
 	if (starts_with(element, "SO "))
-		(*game)->assets.so = ft_strdup(line);
+		(*game)->assets.so = ft_strdup(texture);
 	if (starts_with(element, "WE "))
-		(*game)->assets.we = ft_strdup(line);
+		(*game)->assets.we = ft_strdup(texture);
 	if (starts_with(element, "EA "))
-		(*game)->assets.ea = ft_strdup(line);
+		(*game)->assets.ea = ft_strdup(texture);
 	if (starts_with(element, "F "))
 		(*game)->assets.floor_color = color;
 	if (starts_with(element, "C "))
@@ -82,28 +83,28 @@ void	assets_input(t_game **game, char *element, char *line, int color)
 void	set_flag(t_game **game, char *element)
 {
 	if (starts_with(element, "NO "))
-		(*game)->state.no++;
+		(*game)->assets.state.no++;
 	if (starts_with(element, "SO "))
-		(*game)->state.so++;
+		(*game)->assets.state.so++;
 	if (starts_with(element, "WE "))
-		(*game)->state.we++;
+		(*game)->assets.state.we++;
 	if (starts_with(element, "EA "))
-		(*game)->state.ea++;
+		(*game)->assets.state.ea++;
 	if (starts_with(element, "F "))
-		(*game)->state.f++;
+		(*game)->assets.state.f++;
 	if (starts_with(element, "C "))
-		(*game)->state.c++;
+		(*game)->assets.state.c++;
 }
 
 int	check_flag(t_game *game, char flag)
 {
-	if (flag == 'D' && (game->state.we > 1 || game->state.ea > 1
-			|| game->state.so > 1 || game->state.no > 1 || game->state.c > 1
-			|| game->state.f > 1))
+	if (flag == 'D' && (game->assets.state.we > 1 || game->assets.state.ea > 1
+			|| game->assets.state.so > 1 || game->assets.state.no > 1 || game->assets.state.c > 1
+			|| game->assets.state.f > 1))
 		return (1);
-	else if (flag == 'Z' && (game->state.we == 0 || game->state.ea == 0
-			|| game->state.so == 0 || game->state.no == 0 || game->state.c == 0
-			|| game->state.f == 0))
+	else if (flag == 'Z' && (game->assets.state.we == 0 || game->assets.state.ea == 0
+			|| game->assets.state.so == 0 || game->assets.state.no == 0 || game->assets.state.c == 0
+			|| game->assets.state.f == 0))
 		return (1);
 	else
 		return (0);
@@ -180,7 +181,30 @@ int	parse_color(char *line, char *element, t_game *game)
 	return (1);
 }
 
-int	process_line(char *line, t_game *game)
+int is_first_wall(char *line,t_map *map)
+{
+	char *tmp = line;
+	while(*tmp && (*tmp == ' ' || *tmp == '1'))
+		tmp++;
+	if(*tmp == '\n')
+	{
+		map->width = ft_strlen(line);
+		return 1;
+	}
+	return 0;
+} 
+int map_valid(int fd, char *top_line, t_map *map)
+{
+	char *cur_line = get_next_line(fd);
+	size_t len = ft_strlen(cur_line); 
+	trim_right(cur_line);
+	size_t trim_len = ft_strlen(cur_line);
+	if(cur_line[0] != '1' || cur_line[trim_len - 1] != '1')
+		return 0;
+	return 1;
+}
+
+int	process_line(char *line, t_game *game,int fd)
 {
 	if (is_empty(line))
 		return (1);
@@ -196,15 +220,16 @@ int	process_line(char *line, t_game *game)
 		return (parse_color(line, "F ", game));
 	if (starts_with(line, "C "))
 		return (parse_color(line, "C ", game));
-	return (1); // change
+	if(is_first_wall(line,&game->map))
+		return(map_pars(fd, line, &game->map));
+	return (0); // change
 }
 
 int	validate_elements(int fd, t_game *game)
 {
 	char	*line;
-
 	line = get_next_line(fd);
-	if (!line || line[0] == '\0')
+	if (!line || line[0] == '\n' || line[0] == '\0')
 	{
 		if (line)
 			free(line);
@@ -212,7 +237,7 @@ int	validate_elements(int fd, t_game *game)
 	}
 	while (line)
 	{
-		if (!process_line(line, game))
+		if (!process_line(line, game, fd))
 			return (free(line), 0);
 		free(line);
 		line = get_next_line(fd);
@@ -240,7 +265,7 @@ void	validation_stage(int argc, char **argv, t_game *game)
 	{
 		free_game_content(game);
 		get_next_line(-1);
-		end_error(fd, "ERROR: map is not valid\n");
+		end_error(fd, "ERROR: elements are not valid\n");
 	}
 	close(fd);
 }

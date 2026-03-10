@@ -5,6 +5,12 @@
 # include <fcntl.h>
 # include <stdlib.h>
 
+typedef struct s_map
+{
+	char **grid;
+	size_t width;
+} t_map;
+
 typedef struct s_parse_state
 {
 	int				no;
@@ -16,13 +22,6 @@ typedef struct s_parse_state
 
 }					t_parse_state;
 
-typedef struct s_map
-{
-	char			**grid;
-	int				width;
-	int				height;
-}					t_map;
-
 typedef struct s_assets
 {
 	char			*no;
@@ -32,22 +31,15 @@ typedef struct s_assets
 
 	int				floor_color;
 	int				ceiling_color;
+	t_parse_state	state;
 }					t_assets;
 
-typedef struct s_player
-{
-	double			x;
-	double			y;
-	double			dir_x;
-	double			dir_y;
-}					t_player;
 
 typedef struct s_game
 {
 	t_map			map;
 	t_assets		assets;
-	t_player		player;
-	t_parse_state	state;
+	//t_player		player;
 
 	void			*mlx;
 	void			*win;
