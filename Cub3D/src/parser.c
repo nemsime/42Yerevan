@@ -183,28 +183,20 @@ int	parse_color(char *line, char *element, t_game *game)
 
 int is_first_wall(char *line,t_map *map)
 {
-	char *tmp = line;
+	char *tmp = ft_strtrim(line, " \t\n\r");
+	char *ptr = tmp;
 	while(*tmp && (*tmp == ' ' || *tmp == '1'))
 		tmp++;
-	if(*tmp == '\n')
+	if(*tmp == '\0')
 	{
-		map->width = ft_strlen(line);
+		free(ptr);
 		return 1;
 	}
+	free(ptr);
 	return 0;
 } 
-int map_valid(int fd, char *top_line, t_map *map)
-{
-	char *cur_line = get_next_line(fd);
-	size_t len = ft_strlen(cur_line); 
-	trim_right(cur_line);
-	size_t trim_len = ft_strlen(cur_line);
-	if(cur_line[0] != '1' || cur_line[trim_len - 1] != '1')
-		return 0;
-	return 1;
-}
 
-int	process_line(char *line, t_game *game,int fd)
+int	process_elements(char *line, t_game *game,int fd)
 {
 	if (is_empty(line))
 		return (1);
@@ -220,12 +212,68 @@ int	process_line(char *line, t_game *game,int fd)
 		return (parse_color(line, "F ", game));
 	if (starts_with(line, "C "))
 		return (parse_color(line, "C ", game));
-	if(is_first_wall(line,&game->map))
-		return(map_pars(fd, line, &game->map));
-	return (0); // change
+	return (0);
 }
 
-int	validate_elements(int fd, t_game *game)
+int add_map_line(t_map *map, char *line)
+{
+    t_map_node *new_node;
+	t_map_node *tmp;
+	int len;
+
+	new_node = malloc(sizeof(t_map_node));
+    if (!new_node)
+        return 0;
+    new_node->line = ft_strdup(line);
+    if (!new_node->line)
+        return (free(new_node),0);
+    new_node->next = NULL;
+    if (!map->head)
+        map->head = new_node;
+    else
+    {
+        tmp = map->head;
+        while (tmp->next)
+            tmp = tmp->next;
+        tmp->next = new_node;
+    }
+    len = ft_strlen(line);
+    if (len > map->width)
+        map->width = len;
+    map->height++;
+    return 1;
+}
+
+int map_parsing(int fd,char *top_line,t_map *map)
+{
+    char *cur_line;
+	int i;
+
+	if (!add_map_line(map, top_line))
+		return (0);
+    cur_line = get_next_line(fd);
+    while (cur_line)
+    {
+        if (is_empty(cur_line))
+            return (free(cur_line),0);
+		i = 0;
+        while (cur_line[i])
+        {
+            if (cur_line[i] != ' ' && cur_line[i] != '0' && cur_line[i] != '1' &&
+                cur_line[i] != 'N' && cur_line[i] != 'S' &&
+                cur_line[i] != 'E' && cur_line[i] != 'W')
+                return (free(cur_line),0);
+			i++;
+        }
+        if (!add_map_line(map, cur_line))
+            return (free(cur_line),0);
+        free(cur_line);
+        cur_line = get_next_line(fd);
+    }
+    return (1); 
+}
+
+int	validate_file(int fd, t_game *game)
 {
 	char	*line;
 	line = get_next_line(fd);
@@ -237,13 +285,20 @@ int	validate_elements(int fd, t_game *game)
 	}
 	while (line)
 	{
-		if (!process_line(line, game, fd))
+		if(is_first_wall(line,&game->map))
+			break;
+		if (!process_elements(line, game, fd))
 			return (free(line), 0);
 		free(line);
 		line = get_next_line(fd);
 	}
-	if (check_flag(game, 'Z'))
-		return (0);
+	if (check_flag(game, 'Z') || (line[0] == '\0' || line[0] == '\n'))
+		return (free(line),0);
+	if (!map_parsing(fd, line, &game->map))
+	{
+		free_map(&game->map);
+    	return (free(line), 0);
+	}
 	return (1);
 }
 
@@ -261,7 +316,7 @@ void	validation_stage(int argc, char **argv, t_game *game)
 	if (fd == -1)
 		end_error(0, "ERROR: open failed\n");
 	ft_memset(game, 0, sizeof(t_game));
-	if (!validate_elements(fd, game))
+	if (!validate_file(fd, game))
 	{
 		free_game_content(game);
 		get_next_line(-1);

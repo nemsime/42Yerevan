@@ -5,11 +5,26 @@
 # include <fcntl.h>
 # include <stdlib.h>
 
+typedef struct s_map_node
+{
+    char                *line;
+    struct s_map_node   *next;
+}   t_map_node;
+
 typedef struct s_map
 {
+	t_map_node  *head;
 	char **grid;
-	size_t width;
+	int width;
+	int height;
 } t_map;
+
+typedef struct s_validation
+{
+	int		p_count;
+	int		e_count;
+	char	*next_line;
+}			t_validation;
 
 typedef struct s_parse_state
 {
@@ -51,5 +66,6 @@ void				validation_stage(int argc, char **argv, t_game *game);
 void				end_error(int fd, char *str);
 void				free_split(char ***arr);
 void	free_game_content(t_game *game);
+void free_map(t_map *map);
 
 #endif
