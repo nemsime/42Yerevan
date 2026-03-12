@@ -23,7 +23,7 @@ clean:
 	$(MAKE) clean -C libft
 	$(RM) $(OBJ)
 
-fclean: 
+fclean: clean
 	$(MAKE) fclean -C libft
 	$(RM) $(NAME)
 
