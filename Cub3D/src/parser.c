@@ -181,22 +181,20 @@ int	parse_color(char *line, char *element, t_game *game)
 	return (1);
 }
 
-int is_first_wall(char *line,t_map *map)
+int is_first_wall(char *line)
 {
-	char *tmp = ft_strtrim(line, " \t\n\r");
-	char *ptr = tmp;
+	char *tmp = line;
 	while(*tmp && (*tmp == ' ' || *tmp == '1'))
 		tmp++;
-	if(*tmp == '\0')
+	if((ft_strlen(line) > 2) && (*tmp == '\0' || *tmp == '\n'))
 	{
-		free(ptr);
 		return 1;
 	}
-	free(ptr);
+
 	return 0;
 } 
 
-int	process_elements(char *line, t_game *game,int fd)
+int	process_elements(char *line, t_game *game)
 {
 	if (is_empty(line))
 		return (1);
@@ -248,28 +246,27 @@ int map_parsing(int fd,char *top_line,t_map *map)
 {
     char *cur_line;
 	int i;
-
-	if (!add_map_line(map, top_line))
-		return (0);
-    cur_line = get_next_line(fd);
-    while (cur_line)
+    while (top_line)
     {
-        if (is_empty(cur_line))
-            return (free(cur_line),0);
+		cur_line = get_next_line(fd);
+		trim_right(top_line);
+        if (is_empty(top_line) && cur_line)
+            return (free(top_line),0);
 		i = 0;
-        while (cur_line[i])
+        while (top_line[i])
         {
-            if (cur_line[i] != ' ' && cur_line[i] != '0' && cur_line[i] != '1' &&
-                cur_line[i] != 'N' && cur_line[i] != 'S' &&
-                cur_line[i] != 'E' && cur_line[i] != 'W')
-                return (free(cur_line),0);
+            if (top_line[i] != ' ' && top_line[i] != '0' && top_line[i] != '1' &&
+                top_line[i] != 'N' && top_line[i] != 'S' &&
+                top_line[i] != 'E' && top_line[i] != 'W')
+                return (free(top_line),0);
 			i++;
         }
-        if (!add_map_line(map, cur_line))
-            return (free(cur_line),0);
-        free(cur_line);
-        cur_line = get_next_line(fd);
+        if (!add_map_line(map, top_line))
+            return (free(top_line),0);
+        free(top_line);
+        top_line = cur_line;
     }
+	
     return (1); 
 }
 
@@ -285,9 +282,9 @@ int	validate_file(int fd, t_game *game)
 	}
 	while (line)
 	{
-		if(is_first_wall(line,&game->map))
+		if(is_first_wall(line))
 			break;
-		if (!process_elements(line, game, fd))
+		if (!process_elements(line, game))
 			return (free(line), 0);
 		free(line);
 		line = get_next_line(fd);
