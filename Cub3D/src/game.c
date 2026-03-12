@@ -20,16 +20,26 @@ void	free_map(t_map *map)
 	map->height = 0;
 }
 
-void	free_game_content(t_game *game)
+void	free_assets(t_game *game)
 {
-	if (game->assets.ea)
-		free(game->assets.ea);
-	if (game->assets.we)
-		free(game->assets.we);
-	if (game->assets.so)
-		free(game->assets.so);
 	if (game->assets.no)
 		free(game->assets.no);
+	if (game->assets.so)
+		free(game->assets.so);
+	if (game->assets.we)
+		free(game->assets.we);
+	if (game->assets.ea)
+		free(game->assets.ea);
+}
+
+void	free_game_content(t_game *game)
+{
+	if (!game)
+		return;
+
+	free_assets(game);
+	free_map(&game->map);
+
 }
 
 int	main(int argc, char **argv)
@@ -37,5 +47,4 @@ int	main(int argc, char **argv)
 	t_game game;
 	validation_stage(argc, argv, &game);
 	free_game_content(&game);
-	free_map(&game.map);
 }

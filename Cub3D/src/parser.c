@@ -190,7 +190,6 @@ int is_first_wall(char *line)
 	{
 		return 1;
 	}
-
 	return 0;
 } 
 
