@@ -3,6 +3,7 @@
 
 Zombie::Zombie()
 {
+    std::cout << "A new zombie has been created." << std::endl;
 }
 
 Zombie::~Zombie()
